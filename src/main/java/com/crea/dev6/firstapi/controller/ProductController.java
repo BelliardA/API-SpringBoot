@@ -2,6 +2,7 @@ package com.crea.dev6.firstapi.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,46 +16,119 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.crea.dev6.firstapi.dao.ProductDao;
 import com.crea.dev6.firstapi.model.Product;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Product API", description = "GET and POST method for Products")
 @RestController
 public class ProductController {
 
     @Autowired
     private ProductDao productDao;
 
-    //renvoie la liste des tous les produits
+    // renvoie la liste des tous les produits
+    @Operation(summary = "Get all products", description = "Get all products from the database", tags = { "Product API",
+            "get" })
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = Product.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "No content", content = { @Content(schema = @Schema()) }),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(schema = @Schema()) })
+    })
+
     @GetMapping("/products")
     public List<Product> findAll() {
         return productDao.findAll();
     }
 
-    //renvoie un produit inexistant
+    // renvoie un produit inexistant
+
+    @Operation(summary = "Get Fake product", description = "Find a fake product", tags = { "Product API",
+            "get" })
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = Product.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "No content", content = { @Content(schema = @Schema()) }),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(schema = @Schema()) })
+    })
     @GetMapping("/productfake")
     public Product findFake() {
-        return new Product("Fake Product", 1, 0, 0);
+        return new Product(1, "Fake Product", 0, 0);
     }
 
-    //renvoie un produit par son id
+    // renvoie un produit par son id
+    @Operation(summary = "Get a product by is ID", description = "search a product by is ID", tags = { "Product API",
+            "get" })
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = Product.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "No content", content = { @Content(schema = @Schema()) }),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(schema = @Schema()) })
+    })
     @GetMapping("/product/{id}")
-    public Product findById(@PathVariable("id") int id) {
+    public Optional<Product> findById(@PathVariable("id") int id) {
         return productDao.findById(id);
     }
 
-    //ajout d'un produit
+    // renvoie un produit par son id
+    @Operation(summary = "Get a product by is Name", description = "search a product by is full name", tags = {
+            "Product API",
+            "get" })
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = Product.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "No content", content = { @Content(schema = @Schema()) }),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(schema = @Schema()) })
+    })
+    @GetMapping("/productname/{name}")
+    public Product findByName(@PathVariable("name") String name) {
+        return productDao.findByName(name);
+    }
+
+    // renvoie un produit par son id
+    @Operation(summary = "Get a product by is Name", description = "search a product by is full name", tags = {
+            "Product API",
+            "get" })
+
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success", content = {
+                    @Content(schema = @Schema(implementation = Product.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "204", description = "No content", content = { @Content(schema = @Schema()) }),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(schema = @Schema()) })
+    })
+    @GetMapping("/productPrice/{price}")
+    public List<Product> findByPriceSup(@PathVariable("price") double price) {
+        return productDao.findByPriceGreaterThan(price);
+    }
+
+    // ajout d'un produit
     @PostMapping("/addProduct")
     public ResponseEntity<Void> addProduit(@RequestBody Product product) {
-        List<Product> productAdded = productDao.save(product);
+        Product productAdded = productDao.save(product);
 
         if (productAdded == null)
             return ResponseEntity.noContent().build();
 
         URI location = ServletUriComponentsBuilder
-                        .fromCurrentRequest()
-                        .path("/{id}")
-                        .buildAndExpand(productAdded.get(0).getId())
-                        .toUri();
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(productAdded.getId())
+                .toUri();
 
         return ResponseEntity.created(location).build();
     }
-   
 
 }
